@@ -86,7 +86,7 @@ public class ApiTest {
 
         Map<String, Object> payload = Map.of("email", testEmail);
 
-        Helper.authRequest(TOKEN)
+        Response response = Helper.authRequest(TOKEN)
                 .body(payload)
                 .when()
                 .post("/api/automationTask/getOne")
@@ -95,7 +95,12 @@ public class ApiTest {
                 .body("username", equalTo("user0"))
                 .body("name", equalTo("Name0"))
                 .body("surname", equalTo("Surname0"))
-                .statusCode(200);
+                .statusCode(200)
+                .extract()
+                .response();
+
+        Map<String, Object> users = response.jsonPath().getMap("$");
+        Assertions.assertEquals(5, users.size(), "Количество полей в ответе не совпадает");
     }
 
     @Test
