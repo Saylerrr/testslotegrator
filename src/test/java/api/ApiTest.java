@@ -1,7 +1,5 @@
 package api;
 
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.*;
 
@@ -9,33 +7,27 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ApiTest {
 
-    static String BASE_URL = "https://testslotegrator.com";
     //private static String TOKEN2 = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImtyaWtvMUBtYWlsLnJ1IiwiaWQiOiI2ODgzOGQyMDg4ZjZjMjNlZGNkNzc0Y2IiLCJyb2xlIjoiOGY5YmZlOWQxMzQ1MjM3Y2IzYjJiMjA1ODY0ZGEwNzUiLCJwb3NpdGlvbiI6ImNhZWE4MzQwZTJkMTg2YTU0MDUxOGQwODYwMmFhMDY1IiwiaWF0IjoxNzUzNjQxNDcwLCJleHAiOjE3NTM3Mjc4NzB9.-WEgNilQ9vCXPbENPBWS6roNZ3EIfNiJVUnRYpAztxg";
     static String TOKEN;
     static List<Integer> userId = new ArrayList<>();
     static List<String> userEmail = new ArrayList<>();
-    static String EMAIL = "kriko1@mail.ru";
-    static String PASSWORD = "BhN5zSbBVNxv";
+
 
     @BeforeAll
     static void setup() {
-        RestAssured.baseURI = BASE_URL;
+        Helper.setBaseUri();
     }
 
     @Test
     @Order(1)
     void testLoginAndGetToken() {
-        String body = String.format("{\"email\": \"%s\", \"password\": \"%s\"}", EMAIL, PASSWORD);
 
-        Response response = given()
-                .contentType(ContentType.JSON)
-                .body(body)
+        Response response = Helper.login()
                 .when()
                 .post("/api/tester/login")
                 .andReturn();
@@ -62,9 +54,7 @@ public class ApiTest {
                     "username", username
             );
 
-            Response response = given()
-                    .contentType(ContentType.JSON)
-                    .header("Authorization", "Bearer " + TOKEN)
+            Response response = Helper.authRequest(TOKEN)
                     .body(user)
                     .when()
                     .post("/api/automationTask/create")
@@ -76,7 +66,7 @@ public class ApiTest {
                     .body("surname", equalTo("Surname" + i))
                     .extract()
                     .response();
-            System.out.println(response.asString());
+            //System.out.println(response.asString());
 
             userEmail.add(response.jsonPath().getString("email"));
 
@@ -96,9 +86,7 @@ public class ApiTest {
 
         Map<String, Object> payload = Map.of("email", testEmail);
 
-        given()
-                .contentType(ContentType.JSON)
-                .header("Authorization", "Bearer " + TOKEN)
+        Helper.authRequest(TOKEN)
                 .body(payload)
                 .when()
                 .post("/api/automationTask/getOne")
@@ -113,9 +101,7 @@ public class ApiTest {
     @Test
     @Order(4)
     void getAllUsersSortedByName() {
-        Response response = given()
-                .contentType(ContentType.JSON)
-                .header("Authorization", "Bearer " + TOKEN)
+        Response response = Helper.authRequest(TOKEN)
                 .when()
                 .get("/api/automationTask/getAll")
                 .then()
@@ -142,9 +128,7 @@ public class ApiTest {
             return;
         }
         userId.forEach(id -> {
-            given()
-                    .contentType(ContentType.JSON)
-                    .header("Authorization", "Bearer " + TOKEN)
+            Helper.authRequest(TOKEN)
                     .when()
                     .delete("/api/automationTask/deleteOne/" + id)
                     .then()
@@ -156,9 +140,7 @@ public class ApiTest {
     @Test
     @Order(6)
     void getAllUsersAndEnsureEmpty() {
-        Response response = given()
-                .contentType(ContentType.JSON)
-                .header("Authorization", "Bearer " + TOKEN)
+        Response response = Helper.authRequest(TOKEN)
                 .when()
                 .get("/api/automationTask/getAll")
                 .then()
